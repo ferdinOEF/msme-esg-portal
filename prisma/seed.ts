@@ -1,0 +1,28 @@
+import { PrismaClient } from '@prisma/client'
+const prisma = new PrismaClient()
+async function main(){
+  const zed=await prisma.scheme.upsert({where:{name:'ZED (Zero Defect, Zero Effect)'},update:{},create:{name:'ZED (Zero Defect, Zero Effect)',shortCode:'ZED',type:'scheme',authority:'Ministry of MSME, Govt. of India',pillar:['E','S','G'],description:'National MSME quality & sustainability certification with Bronze/Silver/Gold; subsidies + handholding.',benefits:'Buyer trust; eligibility for certain subsidies; structured improvement.',eligibility:'Udyam-registered MSMEs.',documentsUrl:'https://zed.msme.gov.in',tags:['quality','environment','msme','india']}})
+  const team=await prisma.scheme.upsert({where:{name:'TEAM (Trade Enablement & Marketing Initiative)'},update:{},create:{name:'TEAM (Trade Enablement & Marketing Initiative)',shortCode:'TEAM',type:'scheme',authority:'MoMSME (NSIC) under RAMP',pillar:['G'],description:'ONDC-based onboarding with incentives for cataloguing, account management, logistics, packaging.',benefits:'Market access, digital presence, early-order incentives.',eligibility:'Udyam-registered MSEs; not already onboarded with the same SNP.',documentsUrl:'',tags:['market','ondc','digital','subsidy']}})
+  const gift=await prisma.scheme.upsert({where:{name:'GIFT (MSE Green Investment & Financing for Transformation)'},update:{},create:{name:'GIFT (MSE Green Investment & Financing for Transformation)',shortCode:'GIFT',type:'scheme',authority:'MoMSME / SIDBI',pillar:['E','G'],description:'Green finance: interest subvention, risk sharing; capacity building for green tech adoption.',benefits:'Lower cost of capital; risk coverage for lenders; adoption of green tech.',eligibility:'Udyam-registered MSEs; eligible green projects via participating PLIs.',documentsUrl:'',tags:['finance','green','sidbi','subvention']}})
+  const sidbi4e=await prisma.scheme.upsert({where:{name:'SIDBI 4E (End-to-End Energy Efficiency)'},update:{},create:{name:'SIDBI 4E (End-to-End Energy Efficiency)',shortCode:'SIDBI-4E',type:'scheme',authority:'SIDBI',pillar:['E'],description:'Energy audits + financing; audit-to-implementation pipeline for MSMEs.',benefits:'Quick-win retrofits; concessional loans; verified savings.',eligibility:'MSMEs with viable EE opportunities.',documentsUrl:'',tags:['energy','audit','efficiency','finance']}})
+  const brsr=await prisma.scheme.upsert({where:{name:'BRSR (Business Responsibility & Sustainability Reporting)'},update:{},create:{name:'BRSR (Business Responsibility & Sustainability Reporting)',shortCode:'BRSR',type:'framework',authority:'SEBI / MCA (India)',pillar:['E','S','G'],description:'Indian sustainability disclosure; BRSR Core for listed; MSME-aligned Lite for suppliers.',benefits:'Supplier readiness; better finance/market access.',eligibility:'Mandatory for top listed; MSMEs align via Lite templates.',documentsUrl:'',tags:['reporting','disclosure','india']}})
+  const spice=await prisma.scheme.upsert({where:{name:'SPICE (Scheme for Promotion & Investment in Circular Economy)'},update:{},create:{name:'SPICE (Scheme for Promotion & Investment in Circular Economy)',shortCode:'SPICE',type:'scheme',authority:'MoMSME / SIDBI (under RAMP)',pillar:['E','G'],description:'Credit-Linked Capital Subsidy for brownfield circular economy CAPEX (plant & machinery).',benefits:'25% subsidy up to ₹12.5 lakh (on ₹50 lakh admissible project cost); IEC for circularity.',eligibility:'Udyam-registered MSE; brownfield CE projects; via PLIs after SIDBI MoU.',documentsUrl:'',tags:['circular','recycling','waste','finance','msme']}})
+  await prisma.link.createMany({data:[
+    {fromId:zed.id,toId:gift.id,relation:'unlocks',note:'Recognition supporting green finance terms'},
+    {fromId:sidbi4e.id,toId:gift.id,relation:'supports',note:'Audit → bankable projects for GIFT'},
+    {fromId:brsr.id,toId:team.id,relation:'supports',note:'Disclosure readiness supports ONDC buyers'},
+    {fromId:zed.id,toId:spice.id,relation:'supports',note:'Quality/env systems strengthen CE CAPEX cases'}
+  ]})
+  await prisma.legalDoc.createMany({data:[
+    {title:'CPCB Air (Prevention & Control of Pollution) – General Standards',jurisdiction:'CPCB',sector:'General',locationTag:'India',summary:'Emissions standards and consent requirements for industrial MSMEs.',url:'',tags:['air','consents','cpcb']},
+    {title:'Goa SPCB – Consent to Operate (CTO)',jurisdiction:'Goa',sector:'General',locationTag:'Goa',summary:'CTO under Water/Air Acts; sector-specific limits and validity.',url:'',tags:['cto','consents','goa']},
+    {title:'NGT Digest – Hazardous & Other Wastes for SMEs',jurisdiction:'NGT',sector:'General',locationTag:'India',summary:'Key rulings on hazardous waste storage, manifest, disposal obligations.',url:'',tags:['hazardous','waste','ngt']}
+  ]})
+  await prisma.template.createMany({data:[
+    {title:'ESG Rapid Baseline Checklist (MSME)',category:'checklist',contentMd:'- Permits & consents\n- Energy/water/waste KPIs\n- OHS & POSH\n- Governance policies\n- Evidence & logs',downloadUrl:''},
+    {title:'Factory EIA–Lite Scope & ToR',category:'eia',contentMd:'# EIA ToR\n1. Project description\n2. Baseline env.\n3. Impact & mitigation\n4. EMP & monitoring\n5. Stakeholder consultations',downloadUrl:''},
+    {title:'Supplier Code of Conduct (Template)',category:'policy',contentMd:'## Code of Conduct\n- Legal compliance\n- Environment\n- Labour & human rights\n- Anti-corruption\n- Grievance and audit rights',downloadUrl:''}
+  ]})
+  console.log('Seed complete')
+}
+main().catch(e=>{console.error(e);process.exit(1)}).finally(()=>prisma.$disconnect())

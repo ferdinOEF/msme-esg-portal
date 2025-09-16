@@ -1,0 +1,1 @@
+export default {content:['./app/**/*.{ts,tsx}','./components/**/*.{ts,tsx}'],theme:{extend:{colors:{brand:{50:'#edf9f1',100:'#d3f1e0',200:'#a7e3c2',300:'#74d3a1',400:'#44c481',500:'#26a968',600:'#1a8452',700:'#176a44',800:'#15563a',900:'#0f3927'}}}},plugins:[]} as import('tailwindcss').Config;

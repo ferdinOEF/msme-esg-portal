@@ -1,0 +1,7 @@
+generator client { provider='prisma-client-js' }
+datasource db { provider='sqlite' url=env('DATABASE_URL') }
+model Scheme{ id String @id @default(cuid()) name String @unique shortCode String? type String authority String pillar String[] description String benefits String? eligibility String? documentsUrl String? tags String[] linksFrom Link[] @relation("fromLinks") linksTo Link[] @relation("toLinks") createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
+model Link{ id String @id @default(cuid()) fromId String toId String relation String note String? from Scheme @relation("fromLinks",fields:[fromId],references:[id]) to Scheme @relation("toLinks",fields:[toId],references:[id]) }
+model LegalDoc{ id String @id @default(cuid()) title String jurisdiction String sector String? locationTag String? summary String url String? tags String[] createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
+model Template{ id String @id @default(cuid()) title String category String contentMd String downloadUrl String? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt }
+model CompanySubmission{ id String @id @default(cuid()) name String udyam String? sector String size String turnoverCr Float? state String district String? compliance String[] createdAt DateTime @default(now()) }

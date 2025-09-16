@@ -1,0 +1,2 @@
+import { NextResponse } from 'next/server';import { prisma } from '@/lib/db'
+export async function GET(){const schemes=await prisma.scheme.findMany({include:{linksFrom:true}});const nodes=schemes.map(s=>({id:s.id,label:s.shortCode||s.name,name:s.name}));const links=schemes.flatMap(s=>s.linksFrom.map(l=>({source:l.fromId,target:l.toId,relation:l.relation})));return NextResponse.json({nodes,links})}
