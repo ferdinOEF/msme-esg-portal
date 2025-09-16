@@ -1,4 +1,0 @@
-'use client'
-import Link from 'next/link';import { usePathname } from 'next/navigation'
-const tabs=[{href:'/',label:'Home'},{href:'/schemes',label:'Schemes & Certifications'},{href:'/tools',label:'Compliance Tools'},{href:'/wizard',label:'MSME Input Wizard'},{href:'/legal',label:'Legal Hub'},{href:'/graph',label:'Graph'},{href:'/goa',label:'Goa'},{href:'/admin',label:'Admin'}]
-export default function Navbar(){const p=usePathname();return(<div className='border-b bg-white sticky top-0 z-30'><div className='container flex items-center justify-between py-3'><Link href='/' className='font-semibold text-brand-800'>MSME ESG Compliance Portal</Link><nav className='flex gap-3'>{tabs.map(t=>(<Link key={t.href} href={t.href} className={`px-3 py-2 rounded-lg ${p===t.href?'bg-brand-50 text-brand-800':'hover:bg-slate-100'}`}>{t.label}</Link>))}</nav></div></div>)}
