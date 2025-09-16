@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from '@/lib/db'
 
 export default async function GoaPage() {
@@ -10,13 +11,13 @@ export default async function GoaPage() {
     orderBy: { name: 'asc' },
   })
 
-  // Narrow the element types so TS doesn’t infer implicit any in map callbacks
+  // Narrow the element types so TS doesnâ€™t infer implicit any in map callbacks
   type GoaDoc = typeof goaDocs[number]
   type GoaScheme = typeof goaSchemes[number]
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Goa — State-specific Incentives & Notices</h1>
+      <h1 className="text-2xl font-semibold">Goa â€” State-specific Incentives & Notices</h1>
       <p className="text-sm text-slate-600">
         Add state subsidies, ZED top-ups, consent procedures, and circulars via Admin.
       </p>
