@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  // For local dev we use SQLite (file). In production you'll point DATABASE_URL to Postgres (Neon).
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"            // For local dev. In prod, set DATABASE_URL to Postgres if you prefer.
+  url      = env("postgresql://neondb_owner:npg_nM9Jo5yBhdbU@ep-old-rice-adh63loq-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require")
 }
 
 model Scheme {
@@ -14,12 +13,12 @@ model Scheme {
   shortCode    String?
   type         String   // "scheme" | "certification" | "framework"
   authority    String
-  pillar       String[] // E, S, G
+  pillar       String   // CSV: "E,S,G" (was String[])
   description  String
   benefits     String?
   eligibility  String?
   documentsUrl String?
-  tags         String[]
+  tags         String   // CSV: "finance,green,sidbi" (was String[])
 
   // Graph edges
   linksFrom    Link[]   @relation("fromLinks")
@@ -49,7 +48,7 @@ model LegalDoc {
   locationTag  String?
   summary      String
   url          String?
-  tags         String[]
+  tags         String   // CSV: "air,consents,cpcb" (was String[])
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -75,7 +74,7 @@ model CompanySubmission {
   turnoverCr  Float?
   state       String
   district    String?
-  compliance  String[]
+  compliance  String   // CSV: "consents:valid, iso14001:no" (was String[])
 
   createdAt   DateTime @default(now())
 }
