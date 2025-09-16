@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db'
 
 export default async function LegalPage() {
   const docs = await prisma.legalDoc.findMany({ orderBy: { createdAt: 'desc' } })
+  type Doc = typeof docs[number]
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Legal Hub</h1>
@@ -10,7 +12,7 @@ export default async function LegalPage() {
       </p>
 
       <div className="space-y-3">
-        {docs.map((d) => (
+        {docs.map((d: Doc) => (
           <div key={d.id} className="card">
             <div className="flex items-center justify-between">
               <div>
