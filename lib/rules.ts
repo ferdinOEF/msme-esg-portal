@@ -1,5 +1,3 @@
-# Overwrite lib\rules.ts with a fully typed implementation
-Set-Content -Path lib\rules.ts -Encoding UTF8 -Value @'
 export type CompanyContext = {
   compliance: string[];
   size: "Micro" | "Small" | "Medium" | "Large";
@@ -46,4 +44,3 @@ export function buildRecommendations(c: CompanyContext): Recommendations {
 
   return out;
 }
-'@
