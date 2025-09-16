@@ -1,151 +1,136 @@
-New-Item -ItemType Directory -Force components | Out-Null
-@'
+$SchemeCard = @'
 "use client";
 
 import { useState } from "react";
-import { Download, Upload, Star, CheckCircle, Clock } from "lucide-react";
+import { Download, Upload, Star, CheckCircle, ChevronDown, ChevronUp } from "lucide-react";
 
-export type Scheme = {
+type Scheme = {
   id: string;
   name: string;
   shortCode?: string | null;
-  type?: string | null;
-  authority?: string | null;
-  description?: string | null;
-  eligibility?: string | null;
+  type: string;
+  authority: string;
+  pillar?: string | null;
+  description: string;
   benefits?: string | null;
+  eligibility?: string | null;
   documentsUrl?: string | null;
-  tags?: string | null; // CSV in DB
-  applied?: boolean;    // optional UI state
-  favourite?: boolean;  // optional UI state
+  tags?: string | null; // comma-joined
 };
 
 export default function SchemeCard({ scheme }: { scheme: Scheme }) {
   const [open, setOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const tags = (scheme.tags || "")
-    .split(",")
-    .map(t => t.trim())
-    .filter(Boolean);
+  const [fav, setFav] = useState(false);
+  const [applied, setApplied] = useState(false);
+  const hasDocs = !!scheme.documentsUrl;
 
-  async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("schemeId", scheme.id);
-
-      // Your upload endpoint (implement if not present)
-      const res = await fetch("/api/schemes/upload", {
-        method: "POST",
-        body: form,
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      alert("Uploaded!");
-    } catch (err: any) {
-      alert(err?.message || "Upload failed");
-    } finally {
-      setUploading(false);
-      e.target.value = ""; // reset
+  const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // TODO: wire to API route / storage
+    if (e.target.files && e.target.files.length > 0) {
+      alert(`Selected ${e.target.files[0].name} for upload (demo placeholder).`);
+      e.target.value = "";
     }
-  }
+  };
 
   return (
-    <div className="rounded-xl border bg-white p-4 shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold">{scheme.name}</h3>
+    <div className="rounded-xl border p-4 shadow-sm hover:shadow transition">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-base font-semibold">
+            {scheme.name}{" "}
             {scheme.shortCode ? (
-              <span className="text-xs px-2 py-0.5 rounded bg-slate-100 border">
-                {scheme.shortCode}
-              </span>
+              <span className="text-slate-500">({scheme.shortCode})</span>
             ) : null}
           </div>
-          <div className="text-xs text-slate-600 mt-1">
-            {(scheme.type || scheme.authority) ? `${scheme.type || ""}${scheme.type && scheme.authority ? " • " : ""}${scheme.authority || ""}` : "—"}
+          <div className="text-xs text-slate-500 mt-1">
+            {scheme.type} • {scheme.authority} {scheme.pillar ? `• ${scheme.pillar}` : ""}
           </div>
-
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {tags.map((t, i) => (
-                <span key={i} className="text-xs px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-100">
-                  {t}
-                </span>
-              ))}
+          {scheme.tags && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {scheme.tags
+                .split(",")
+                .map((t) => t.trim())
+                .filter(Boolean)
+                .map((t) => (
+                  <span
+                    key={t}
+                    className="text-[11px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full"
+                    aria-label={`Tag ${t}`}
+                  >
+                    {t}
+                  </span>
+                ))}
             </div>
           )}
         </div>
 
         <div className="flex items-center gap-2">
           <button
-            className="inline-flex items-center gap-1 text-xs px-2 py-1 border rounded hover:bg-slate-50"
+            className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded border ${fav ? "bg-yellow-50 border-yellow-300" : "bg-white"}`}
+            onClick={() => setFav((v) => !v)}
+            aria-pressed={fav}
+            aria-label="Save to favourites"
             title="Save to favourites"
           >
-            <Star size={14} /> Favourite
+            <Star size={14} /> {fav ? "Favourited" : "Favourite"}
           </button>
           <button
-            className="inline-flex items-center gap-1 text-xs px-2 py-1 border rounded hover:bg-slate-50"
+            className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded border ${applied ? "bg-green-50 border-green-300" : "bg-white"}`}
+            onClick={() => setApplied((v) => !v)}
+            aria-pressed={applied}
+            aria-label="Mark applied"
             title="Mark applied"
           >
-            <CheckCircle size={14} /> Applied
+            <CheckCircle size={14} /> {applied ? "Applied" : "Mark applied"}
           </button>
         </div>
       </div>
 
+      <div className="mt-3 text-sm text-slate-700 line-clamp-3">
+        {scheme.description}
+      </div>
+
       <div className="mt-3 flex flex-wrap gap-2">
-        <label className="inline-flex items-center gap-1 text-xs px-2 py-1 border rounded cursor-pointer hover:bg-slate-50">
+        <a
+          href={scheme.documentsUrl || "#"}
+          target={scheme.documentsUrl ? "_blank" : undefined}
+          aria-disabled={!scheme.documentsUrl}
+          className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded border ${hasDocs ? "hover:bg-slate-50" : "opacity-60 pointer-events-none"}`}
+          title={hasDocs ? "Download circulars / FAQs" : "No documents uploaded"}
+        >
+          <Download size={14} />
+          Download docs
+          <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded ${hasDocs ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+            {hasDocs ? "Available" : "Pending"}
+          </span>
+        </a>
+
+        <label className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded border cursor-pointer hover:bg-slate-50" title="Upload supporting document">
           <Upload size={14} />
-          <input type="file" className="hidden" onChange={onUpload} />
-          {uploading ? "Uploading..." : "Upload doc"}
+          Upload support
+          <input type="file" className="hidden" onChange={onUpload} aria-label="Upload supporting document" />
         </label>
 
-        {scheme.documentsUrl ? (
-          <a
-            href={scheme.documentsUrl}
-            target="_blank"
-            className="inline-flex items-center gap-1 text-xs px-2 py-1 border rounded hover:bg-slate-50"
-          >
-            <Download size={14} /> Download circulars/FAQ
-          </a>
-        ) : (
-          <span className="inline-flex items-center gap-1 text-xs px-2 py-1 border rounded text-slate-500">
-            <Clock size={14} /> No downloads yet
-          </span>
-        )}
-
         <button
-          onClick={() => setOpen(v => !v)}
-          className="ml-auto text-xs px-2 py-1 border rounded hover:bg-slate-50"
+          className="ml-auto inline-flex items-center gap-1 text-xs px-2 py-1 rounded border hover:bg-slate-50"
+          onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-controls={`scheme-details-${scheme.id}`}
         >
+          {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           {open ? "Hide details" : "View details"}
         </button>
       </div>
 
       {open && (
-        <div id={`scheme-details-${scheme.id}`} className="mt-4 grid gap-3 text-sm">
-          <Section label="Description" value={scheme.description} />
-          <Section label="Eligibility" value={scheme.eligibility} />
-          <Section label="Benefits" value={scheme.benefits} />
-          {/* Add “Deadlines” field in your DB if needed and show here */}
+        <div id={`scheme-details-${scheme.id}`} className="mt-3 space-y-2 text-sm">
+          <div><span className="font-medium">Eligibility:</span> {scheme.eligibility || "—"}</div>
+          <div><span className="font-medium">Benefits:</span> {scheme.benefits || "—"}</div>
+          {/* Add other fields like deadlines as you store them */}
         </div>
       )}
     </div>
   );
 }
-
-function Section({ label, value }: { label: string; value?: string | null }) {
-  if (!value) return null;
-  return (
-    <div>
-      <div className="text-xs font-semibold text-slate-500">{label}</div>
-      <div className="mt-1">{value}</div>
-    </div>
-  );
-}
-'@ | Set-Content -NoNewline components/SchemeCard.tsx
-s
+'@
+Set-Content -Path "components\SchemeCard.tsx" -Value $SchemeCard -Encoding utf8

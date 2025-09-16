@@ -1,4 +1,4 @@
-@"
+$Layout = @'
 import "./globals.css";
 import Link from "next/link";
 
@@ -28,4 +28,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
-"@ | Set-Content -Encoding UTF8 app\layout.tsx
+'@
+Set-Content -Path "app\layout.tsx" -Value $Layout -Encoding utf8
