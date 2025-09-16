@@ -2,137 +2,119 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  const zed = await prisma.scheme.upsert({
-    where: { name: 'ZED (Zero Defect, Zero Effect)' },
-    update: {},
-    create: {
-      name: 'ZED (Zero Defect, Zero Effect)',
+  // Upsert schemes
+  const schemes = [
+    {
+      name: 'MSME Sustainable (ZED) Certification',
       shortCode: 'ZED',
-      type: 'scheme',
-      authority: 'Ministry of MSME, Govt. of India',
+      type: 'Certification',
+      authority: 'MSME',
       pillar: 'E,S,G',
-      description: 'National MSME quality & sustainability certification with Bronze/Silver/Gold; subsidies + handholding.',
-      benefits: 'Buyer trust; eligibility for certain subsidies; structured improvement.',
-      eligibility: 'Udyam-registered MSMEs.',
+      tags: 'central,scheme,quality,sustainability',
+      description: 'ZED 2.0 certification for MSMEs with Bronze/Silver/Gold levels',
+      benefits: 'Subsidy on certification, handholding, assessments',
+      eligibility: 'Registered MSMEs; support varies by category',
       documentsUrl: 'https://zed.msme.gov.in',
-      tags: 'quality,environment,msme,india'
-    }
-  })
-
-  const team = await prisma.scheme.upsert({
-    where: { name: 'TEAM (Trade Enablement & Marketing Initiative)' },
-    update: {},
-    create: {
-      name: 'TEAM (Trade Enablement & Marketing Initiative)',
+    },
+    {
+      name: 'Technology and Energy Assessment for MSMEs',
       shortCode: 'TEAM',
-      type: 'scheme',
-      authority: 'MoMSME (NSIC) under RAMP',
-      pillar: 'G',
-      description: 'ONDC-based onboarding with incentives for cataloguing, account management, logistics, packaging.',
-      benefits: 'Market access, digital presence, early-order incentives.',
-      eligibility: 'Udyam-registered MSEs; not already onboarded with the same SNP.',
-      documentsUrl: '',
-      tags: 'market,ondc,digital,subsidy'
-    }
-  })
-
-  const gift = await prisma.scheme.upsert({
-    where: { name: 'GIFT (MSE Green Investment & Financing for Transformation)' },
-    update: {},
-    create: {
-      name: 'GIFT (MSE Green Investment & Financing for Transformation)',
-      shortCode: 'GIFT',
-      type: 'scheme',
-      authority: 'MoMSME / SIDBI',
-      pillar: 'E,G',
-      description: 'Green finance: interest subvention, risk sharing; capacity building for green tech adoption.',
-      benefits: 'Lower cost of capital; risk coverage for lenders; adoption of green tech.',
-      eligibility: 'Udyam-registered MSEs; eligible green projects via participating PLIs.',
-      documentsUrl: '',
-      tags: 'finance,green,sidbi,subvention'
-    }
-  })
-
-  const sidbi4e = await prisma.scheme.upsert({
-    where: { name: 'SIDBI 4E (End-to-End Energy Efficiency)' },
-    update: {},
-    create: {
+      type: 'Scheme',
+      authority: 'MSME',
+      pillar: 'E',
+      tags: 'energy,audit,subsidy',
+      description: 'Detailed energy audits and tech upgradation support',
+      benefits: 'Co-funding for audits & implementation',
+      eligibility: 'Registered MSMEs, sectoral focus',
+      documentsUrl: 'https://www.dcmsme.gov.in',
+    },
+    {
+      name: 'MSME SPICE',
+      shortCode: 'SPICE',
+      type: 'Scheme',
+      authority: 'MSME',
+      pillar: 'E',
+      tags: 'technology,process,efficiency,goa',
+      description: 'Support for adoption of specified clean/efficient technologies',
+      benefits: 'Subsidy against notified technology list',
+      eligibility: 'MSMEs adopting listed tech',
+      documentsUrl: null,
+    },
+    {
       name: 'SIDBI 4E (End-to-End Energy Efficiency)',
-      shortCode: 'SIDBI-4E',
-      type: 'scheme',
+      shortCode: 'SIDBI4E',
+      type: 'Scheme',
       authority: 'SIDBI',
       pillar: 'E',
-      description: 'Energy audits + financing; audit-to-implementation pipeline for MSMEs.',
-      benefits: 'Quick-win retrofits; concessional loans; verified savings.',
-      eligibility: 'MSMEs with viable EE opportunities.',
-      documentsUrl: '',
-      tags: 'energy,audit,efficiency,finance'
-    }
-  })
+      tags: 'finance,loan,energy',
+      description: 'Loans + technical assistance for energy efficiency',
+      benefits: 'Concessional finance + TA via consultants',
+      eligibility: 'Eligible MSMEs across sectors',
+      documentsUrl: 'https://www.sidbi.in',
+    },
+  ]
 
-  const brsr = await prisma.scheme.upsert({
-    where: { name: 'BRSR (Business Responsibility & Sustainability Reporting)' },
-    update: {},
-    create: {
-      name: 'BRSR (Business Responsibility & Sustainability Reporting)',
-      shortCode: 'BRSR',
-      type: 'framework',
-      authority: 'SEBI / MCA (India)',
-      pillar: 'E,S,G',
-      description: 'Indian sustainability disclosure; BRSR Core for listed; MSME-aligned Lite for suppliers.',
-      benefits: 'Supplier readiness; better finance/market access.',
-      eligibility: 'Mandatory for top listed; MSMEs align via Lite templates.',
-      documentsUrl: '',
-      tags: 'reporting,disclosure,india'
-    }
-  })
+  for (const s of schemes) {
+    await prisma.scheme.upsert({
+      where: { name: s.name },
+      update: s,
+      create: s,
+    })
+  }
 
-  const spice = await prisma.scheme.upsert({
-    where: { name: 'SPICE (Scheme for Promotion & Investment in Circular Economy)' },
-    update: {},
-    create: {
-      name: 'SPICE (Scheme for Promotion & Investment in Circular Economy)',
-      shortCode: 'SPICE',
-      type: 'scheme',
-      authority: 'MoMSME / SIDBI (under RAMP)',
-      pillar: 'E,G',
-      description: 'Credit-Linked Capital Subsidy for brownfield circular economy CAPEX (plant & machinery).',
-      benefits: '25% subsidy up to ₹12.5 lakh (on ₹50 lakh admissible project cost); IEC for circularity.',
-      eligibility: 'Udyam-registered MSE; brownfield CE projects; via PLIs after SIDBI MoU.',
-      documentsUrl: '',
-      tags: 'circular,recycling,waste,finance,msme'
-    }
-  })
-
-  // Example relations
-  await prisma.link.createMany({
-    data: [
-      { fromId: zed.id,    toId: gift.id,   relation: 'unlocks', note: 'Recognition that can support green finance terms' },
-      { fromId: sidbi4e.id,toId: gift.id,   relation: 'supports', note: 'Audit → bankable projects for GIFT' },
-      { fromId: brsr.id,   toId: team.id,   relation: 'supports', note: 'Disclosure readiness supports ONDC buyers' },
-      { fromId: zed.id,    toId: spice.id,  relation: 'supports', note: 'Quality/env systems strengthen CE CAPEX cases' },
-    ]
-  })
-
-  // Legal docs (sample)
-  await prisma.legalDoc.createMany({
-    data: [
-      { title:'CPCB Air (Prevention & Control of Pollution) – General Standards', jurisdiction:'CPCB', sector:'General', locationTag:'India', summary:'Emissions standards and consent requirements for industrial MSMEs.', url:'', tags:'air,consents,cpcb' },
-      { title:'Goa SPCB – Consent to Operate (CTO)',                            jurisdiction:'Goa',  sector:'General', locationTag:'Goa',   summary:'CTO under Water/Air Acts; sector-specific limits and validity.', url:'', tags:'cto,consents,goa' },
-      { title:'NGT Digest – Hazardous & Other Wastes for SMEs',                 jurisdiction:'NGT',  sector:'General', locationTag:'India', summary:'Key rulings shaping hazardous waste storage, manifest, disposal obligations.', url:'', tags:'hazardous,waste,ngt' },
-    ]
-  })
+  // Legal docs
+  const legal = [
+    { title: 'Goa: Plastic Waste Management Advisory (sample)', jurisdiction: 'Goa', sector: 'General', locationTag: 'Goa', summary: 'Illustrative advisory on EPR thresholds for MSMEs', url: null, tags: 'goa,plastic,epr' },
+    { title: 'Goa: Consent to Operate timelines (sample)', jurisdiction: 'Goa', sector: 'Manufacturing', locationTag: 'Goa', summary: 'Suggested CTO processing timelines for MSMEs', url: null, tags: 'goa,cto,pollution-control' },
+    { title: 'CPCB: Hazardous Waste Guidelines (sample)', jurisdiction: 'Central', sector: 'General', locationTag: null, summary: 'Key requirements on storage/manifest & disposal', url: null, tags: 'cpcb,hazardous-waste' },
+  ]
+  for (const d of legal) {
+    await prisma.legalDoc.upsert({
+      where: { title: d.title },
+      update: d,
+      create: d,
+    })
+  }
 
   // Templates
-  await prisma.template.createMany({
-    data: [
-      { title:'ESG Rapid Baseline Checklist (MSME)', category:'checklist', contentMd:'- Permits & consents\n- Energy/water/waste KPIs\n- OHS & POSH\n- Governance policies\n- Evidence & logs', downloadUrl:'' },
-      { title:'Factory EIA–Lite Scope & ToR',        category:'eia',       contentMd:'# EIA ToR\n1. Project description\n2. Baseline env.\n3. Impact & mitigation\n4. EMP & monitoring\n5. Stakeholder consultations', downloadUrl:'' },
-      { title:'Supplier Code of Conduct (Template)', category:'policy',     contentMd:'## Code of Conduct\n- Legal compliance\n- Environment\n- Labour & human rights\n- Anti-corruption\n- Grievance and audit rights', downloadUrl:'' }
-    ]
-  })
+  const templates = [
+    { title: 'ESG Starter Checklist', category: 'Checklist', contentMd: '# ESG Starter Checklist\n- Identify legal consents\n- Map E/S/G risks\n- Build 30/60/90 plan', downloadUrl: null },
+    { title: 'EIA Input Sheet', category: 'Template', contentMd: '# EIA Input Sheet\nFields: Process, Inputs, Emissions, Effluents, Mitigation', downloadUrl: null },
+  ]
+  for (const t of templates) {
+    await prisma.template.upsert({
+      where: { title: t.title },
+      update: t,
+      create: t,
+    })
+  }
 
-  console.log('Seed complete')
+  // Links (graph)
+  const zed = await prisma.scheme.findUnique({ where: { name: 'MSME Sustainable (ZED) Certification' } })
+  const spice = await prisma.scheme.findUnique({ where: { name: 'MSME SPICE' } })
+  const sidbi4e = await prisma.scheme.findUnique({ where: { name: 'SIDBI 4E (End-to-End Energy Efficiency)' } })
+
+  if (zed && spice) {
+    await prisma.link.upsert({
+      where: { id: 'zed->spice' },
+      update: { relation: 'supports', note: 'ZED compliance strengthens adoption under SPICE', fromId: zed.id, toId: spice.id },
+      create: { id: 'zed->spice', relation: 'supports', note: 'ZED compliance strengthens adoption under SPICE', fromId: zed.id, toId: spice.id },
+    })
+  }
+  if (zed && sidbi4e) {
+    await prisma.link.upsert({
+      where: { id: 'zed->sidbi4e' },
+      update: { relation: 'unlocks', note: 'ZED audit outcomes can unlock 4E financing', fromId: zed.id, toId: sidbi4e.id },
+      create: { id: 'zed->sidbi4e', relation: 'unlocks', note: 'ZED audit outcomes can unlock 4E financing', fromId: zed.id, toId: sidbi4e.id },
+    })
+  }
 }
 
-main().catch(e => { console.error(e); process.exit(1) }).finally(() => prisma.$disconnect())
+main().then(() => {
+  console.log('Seed complete')
+}).catch(e => {
+  console.error(e)
+  process.exit(1)
+}).finally(async () => {
+  await prisma.$disconnect()
+})
