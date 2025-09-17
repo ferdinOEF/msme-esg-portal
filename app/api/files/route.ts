@@ -4,56 +4,86 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
 // GET /api/files?schemeId=...
+// Returns files linked to a scheme
 export async function GET(req: NextRequest) {
   try {
     const schemeId = req.nextUrl.searchParams.get('schemeId');
-    if (!schemeId) return NextResponse.json({ files: [] });
+    if (!schemeId) {
+      return NextResponse.json({ files: [] });
+    }
 
-    const rows = await prisma.file.findMany({
+    const files = await prisma.file.findMany({
       where: { schemeId },
       orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        url: true,
+        type: true,
+        status: true,
+        createdAt: true,
+      },
     });
 
-    return NextResponse.json({ files: rows });
-  } catch (err: any) {
+    return NextResponse.json({ files });
+  } catch (err) {
     console.error('[files.GET] error', err);
-    return NextResponse.json({ error: 'Failed to fetch files' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to load files' }, { status: 500 });
   }
 }
 
-// POST /api/files  (multipart/form-data or JSON)
-// Accepts either:
-// - form-data: schemeId, title, url, type, status
-// - JSON: { schemeId, title, url, type, status }
+// POST /api/files
+// Body: { schemeId: string, name: string, url?: string, type?: 'CIRCULAR'|'FAQ'|'FORM'|'OTHER', status?: 'UPLOADED'|'PENDING' }
 export async function POST(req: NextRequest) {
   try {
-    let payload: any;
+    const body = await req.json().catch(() => null) as
+      | { schemeId?: string; name?: string; url?: string; type?: string; status?: string }
+      | null;
 
-    const contentType = req.headers.get('content-type') || '';
-    if (contentType.includes('multipart/form-data')) {
-      const fd = await req.formData();
-      payload = {
-        schemeId: fd.get('schemeId')?.toString() || null,
-        title: fd.get('title')?.toString() || 'Untitled',
-        url: fd.get('url')?.toString() || null,
-        type: (fd.get('type')?.toString() || 'SUPPORTING') as any, // FileType
-        status: (fd.get('status')?.toString() || 'UPLOADED') as any, // FileStatus
-      };
-    } else {
-      payload = await req.json();
-      payload = {
-        schemeId: payload.schemeId ?? null,
-        title: payload.title ?? 'Untitled',
-        url: payload.url ?? null,
-        type: (payload.type ?? 'SUPPORTING') as any,
-        status: (payload.status ?? 'UPLOADED') as any,
-      };
+    if (!body?.schemeId || !body?.name) {
+      return NextResponse.json(
+        { error: 'schemeId and name are required' },
+        { status: 400 },
+      );
     }
 
-    const created = await prisma.file.create({ data: payload });
-    return NextResponse.json({ file: created }, { status: 201 });
-  } catch (err: any) {
+    const file = await prisma.file.create({
+      data: {
+        schemeId: body.schemeId,
+        name: body.name,
+        url: body.url ?? null,
+        type: (body.type as any) ?? 'OTHER',
+        status: (body.status as any) ?? 'UPLOADED',
+      },
+      select: {
+        id: true,
+        name: true,
+        url: true,
+        type: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    return NextResponse.json({ file }, { status: 201 });
+  } catch (err) {
     console.error('[files.POST] error', err);
-    return NextResponse.json({ error: 'Failed to create file' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create file record' }, { status: 500 });
+  }
+}
+
+// DELETE /api/files?id=...
+export async function DELETE(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: 'id is required' }, { status: 400 });
+    }
+
+    await prisma.file.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('[files.DELETE] error', err);
+    return NextResponse.json({ error: 'Failed to delete file record' }, { status: 500 });
   }
 }

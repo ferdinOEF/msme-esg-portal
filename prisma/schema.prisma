@@ -7,6 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model file {
+  id        String     @id @default(cuid())
+  schemeId  String
+  scheme    Scheme     @relation(fields: [schemeId], references: [id], onDelete: Cascade)
+  name      String
+  url       String?    // public URL to the uploaded doc (Vercel Blob/S3/etc.)
+  type      FileType   @default(OTHER)
+  status    FileStatus @default(PENDING)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
 model Scheme {
   id           String   @id @default(cuid())
   name         String
@@ -25,7 +37,7 @@ model Scheme {
   // relations
   linksFrom Link[]  @relation("LinksFrom")
   linksTo   Link[]  @relation("LinksTo")
-  files     File[]  // <-- uploaded files tied to scheme
+  files     file[]  // <-- uploaded files tied to scheme
 }
 
 model LegalDoc {
@@ -62,7 +74,7 @@ model Link {
   to   Scheme @relation(fields: [toId], references: [id], name: "LinksTo")
 }
 
-// ---------- File attachments for schemes ----------
+
 enum FileType {
   CIRCULAR
   FAQ
@@ -74,19 +86,5 @@ enum FileType {
 enum FileStatus {
   UPLOADED
   PENDING
-}
-
-model File {
-  id         String     @id @default(cuid())
-  schemeId   String?    // nullable so you can also attach files to other things later
-  scheme     Scheme?    @relation(fields: [schemeId], references: [id])
-  title      String
-  type       FileType   @default(SUPPORTING)
-  url        String?    // public URL (e.g., Vercel storage/S3/Drive)
-  storageKey String?    // provider key if you store the blob
-  status     FileStatus @default(UPLOADED)
-
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
 }
 
