@@ -7,7 +7,6 @@ type Scheme = {
   shortCode?: string | null;
   type: string;
   authority: string;
-  pillar?: string | null;
   description: string;
   benefits?: string | null;
   eligibility?: string | null;
