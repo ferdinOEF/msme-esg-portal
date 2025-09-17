@@ -1,86 +1,81 @@
+// prisma/schema.prisma
+// SQLite/Postgres compatible. Adjust provider/url as needed.
+datasource db {
+  provider = env("DATABASE_PROVIDER") // e.g. "postgresql" or "sqlite"
+  url      = env("DATABASE_URL")
+}
+
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  // Use the same DB everywhere (set DATABASE_URL in .env & Vercel)
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 model Scheme {
   id           String   @id @default(cuid())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
   name         String   @unique
   shortCode    String?
-  type         String            // e.g. "Scheme" | "Certification" | "Framework"
-  authority    String            // e.g. "MSME", "MoEFCC", "State"
-  description  String
+  /// "Scheme" | "Certification" | "Framework" | "Subsidy" (keep as free text for now)
+  type         String
+  authority    String?   // e.g. MSME, SIDBI, State Dept, BIS, ISO
+  pillar       String?   // optional; was missing in DB—kept for forward-compat
+  tags         String    @default("") // CSV tags like "central,scheme,quality"
+  description  String?
   benefits     String?
   eligibility  String?
   documentsUrl String?
-  tags         String            // CSV like "central,scheme,environment"
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  // relations
-  linksFrom    Link[]   @relation("LinksFrom")
-  linksTo      Link[]   @relation("LinksTo")
-  files        File[]
-}
-
-model LegalDoc {
-  id           String   @id @default(cuid())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  title        String   @unique
-  jurisdiction String           // e.g. "Central" | "State"
-  sector       String?
-  locationTag  String?
-  summary      String?
-  url          String?
-  tags         String           // CSV required
+  files     File[]
+  linksFrom Link[]  @relation("LinksFrom")
+  linksTo   Link[]  @relation("LinksTo")
 }
 
 model Template {
-  id           String   @id @default(cuid())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  title        String   @unique
-  category     String           // e.g. "Checklist", "Policy", "Form"
-  contentMd    String
-  downloadUrl  String?
-  tags         String           // CSV required
+  id          String   @id @default(cuid())
+  title       String   @unique
+  category    String   // "Checklist" | "Audit" | "Policy" | ...
+  contentMd   String
+  tags        String   @default("") // <- add tags to avoid seed error
+  downloadUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-model Link {
-  id        String  @id @default(cuid())
-  createdAt DateTime @default(now())
-
-  fromId    String
-  toId      String
-  relation  String
-
-  from      Scheme  @relation("LinksFrom", fields: [fromId], references: [id], onDelete: Cascade)
-  to        Scheme  @relation("LinksTo",   fields: [toId],   references: [id], onDelete: Cascade)
-
-  @@index([fromId])
-  @@index([toId])
+model LegalDoc {
+  id          String   @id @default(cuid())
+  title       String   @unique
+  jurisdiction String  // "Central", "State", etc.
+  sector      String?
+  locationTag String?
+  summary     String?
+  url         String?
+  tags        String   @default("") // required logically; default to empty
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model File {
   id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
   schemeId  String?
-  name      String
+  title     String?
   url       String
-  kind      String?   // e.g. "circular", "faq", "supporting-document"
+  status    FileStatus @default(UPLOADED)
+  createdAt DateTime @default(now())
 
-  scheme    Scheme?  @relation(fields: [schemeId], references: [id], onDelete: SetNull)
+  scheme    Scheme?  @relation(fields: [schemeId], references: [id], onDelete: Cascade)
+}
 
-  @@index([schemeId])
+enum FileStatus {
+  UPLOADED
+  PENDING
+}
+
+model Link {
+  id           String  @id @default(cuid())
+  fromSchemeId String?
+  toSchemeId   String?
+  label        String?
+
+  from Scheme? @relation("LinksFrom", fields: [fromSchemeId], references: [id], onDelete: Cascade)
+  to   Scheme? @relation("LinksTo",   fields: [toSchemeId],   references: [id], onDelete: Cascade)
 }
