@@ -14,7 +14,7 @@
     "next": "14.2.8",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "zod": "3.23.8"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/bcryptjs": "2.4.6",
@@ -26,5 +26,8 @@
     "tailwindcss": "3.4.10",
     "tsx": "4.19.1",
     "typescript": "5.6.2"
-  }
+  },
+"scripts": {
+  "seed": "node prisma/seed.mjs"
+}
 }

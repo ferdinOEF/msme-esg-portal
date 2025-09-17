@@ -3,88 +3,84 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"           // production on Vercel => Postgres/Neon
-  url      = env("DATABASE_URL")    // DO NOT inline a URL in env()
+  // Use the same DB everywhere (set DATABASE_URL in .env & Vercel)
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// prisma/schema.prisma (excerpt)
 model Scheme {
   id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   name         String   @unique
   shortCode    String?
-  type         String
-  authority    String
+  type         String            // e.g. "Scheme" | "Certification" | "Framework"
+  authority    String            // e.g. "MSME", "MoEFCC", "State"
   description  String
   benefits     String?
   eligibility  String?
   documentsUrl String?
-  tags         String    // comma-separated
-  linksFrom    Link[]    @relation("fromLinks")
-  linksTo      Link[]    @relation("toLinks")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  tags         String            // CSV like "central,scheme,environment"
 
+  // relations
+  linksFrom    Link[]   @relation("LinksFrom")
+  linksTo      Link[]   @relation("LinksTo")
   files        File[]
-}
-
-model File {
-  id        String   @id @default(cuid())
-  schemeId  String
-  scheme    Scheme   @relation(fields: [schemeId], references: [id])
-  filename  String
-  url       String
-  status    String   // 'Uploaded' | 'Pending'
-  createdAt DateTime @default(now())
-}
-
-
-model Link {
-  id       String  @id @default(cuid())
-
-  fromId   String
-  toId     String
-  relation String
-  note     String?
-
-  from     Scheme  @relation("fromLinks", fields: [fromId], references: [id])
-  to       Scheme  @relation("toLinks", fields: [toId], references: [id])
 }
 
 model LegalDoc {
   id           String   @id @default(cuid())
-  title        String
-  jurisdiction String
-  sector       String?
-  locationTag  String?
-  summary      String
-  url          String?
-  tags         String   // CSV: "air,consents,cpcb" (was String[])
-
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  title        String   @unique
+  jurisdiction String           // e.g. "Central" | "State"
+  sector       String?
+  locationTag  String?
+  summary      String?
+  url          String?
+  tags         String           // CSV required
 }
 
 model Template {
-  id          String   @id @default(cuid())
-  title       String
-  category    String   // "audit" | "checklist" | "policy" | "eia"
-  contentMd   String
-  downloadUrl String?
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  title        String   @unique
+  category     String           // e.g. "Checklist", "Policy", "Form"
+  contentMd    String
+  downloadUrl  String?
+  tags         String           // CSV required
 }
 
-model CompanySubmission {
-  id          String   @id @default(cuid())
-  name        String
-  udyam       String?
-  sector      String
-  size        String   // "Micro" | "Small" | "Medium"
-  turnoverCr  Float?
-  state       String
-  district    String?
-  compliance  String   // CSV: "consents:valid, iso14001:no" (was String[])
+model Link {
+  id        String  @id @default(cuid())
+  createdAt DateTime @default(now())
 
-  createdAt   DateTime @default(now())
+  fromId    String
+  toId      String
+  relation  String
+
+  from      Scheme  @relation("LinksFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to        Scheme  @relation("LinksTo",   fields: [toId],   references: [id], onDelete: Cascade)
+
+  @@index([fromId])
+  @@index([toId])
+}
+
+model File {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schemeId  String?
+  name      String
+  url       String
+  kind      String?   // e.g. "circular", "faq", "supporting-document"
+
+  scheme    Scheme?  @relation(fields: [schemeId], references: [id], onDelete: SetNull)
+
+  @@index([schemeId])
 }

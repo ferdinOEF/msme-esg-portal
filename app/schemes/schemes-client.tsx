@@ -1,6 +1,3 @@
-$SchemesClient = @'
-"use client";
-
 import { useMemo, useState } from "react";
 import SchemeCard from "@/components/SchemeCard";
 
@@ -100,5 +97,3 @@ export default function SchemesClient({ schemes }: { schemes: Scheme[] }) {
     </div>
   );
 }
-'@
-Set-Content -Path "app\schemes\schemes-client.tsx" -Value $SchemesClient -Encoding utf8

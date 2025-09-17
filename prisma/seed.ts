@@ -1,120 +1,102 @@
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
+import { PrismaClient, Prisma } from '@prisma/client';
 
-async function main() {
-  // Upsert schemes
-  const schemes = [
-    {
-      name: 'MSME Sustainable (ZED) Certification',
-      shortCode: 'ZED',
-      type: 'Certification',
-      authority: 'MSME',
-      pillar: 'E,S,G',
-      tags: 'central,scheme,quality,sustainability',
-      description: 'ZED 2.0 certification for MSMEs with Bronze/Silver/Gold levels',
-      benefits: 'Subsidy on certification, handholding, assessments',
-      eligibility: 'Registered MSMEs; support varies by category',
-      documentsUrl: 'https://zed.msme.gov.in',
-    },
-    {
-      name: 'Technology and Energy Assessment for MSMEs',
-      shortCode: 'TEAM',
-      type: 'Scheme',
-      authority: 'MSME',
-      pillar: 'E',
-      tags: 'energy,audit,subsidy',
-      description: 'Detailed energy audits and tech upgradation support',
-      benefits: 'Co-funding for audits & implementation',
-      eligibility: 'Registered MSMEs, sectoral focus',
-      documentsUrl: 'https://www.dcmsme.gov.in',
-    },
-    {
-      name: 'MSME SPICE',
-      shortCode: 'SPICE',
-      type: 'Scheme',
-      authority: 'MSME',
-      pillar: 'E',
-      tags: 'technology,process,efficiency,goa',
-      description: 'Support for adoption of specified clean/efficient technologies',
-      benefits: 'Subsidy against notified technology list',
-      eligibility: 'MSMEs adopting listed tech',
-      documentsUrl: null,
-    },
-    {
-      name: 'SIDBI 4E (End-to-End Energy Efficiency)',
-      shortCode: 'SIDBI4E',
-      type: 'Scheme',
-      authority: 'SIDBI',
-      pillar: 'E',
-      tags: 'finance,loan,energy',
-      description: 'Loans + technical assistance for energy efficiency',
-      benefits: 'Concessional finance + TA via consultants',
-      eligibility: 'Eligible MSMEs across sectors',
-      documentsUrl: 'https://www.sidbi.in',
-    },
-  ]
+const prisma = new PrismaClient();
 
-  for (const s of schemes) {
-    await prisma.scheme.upsert({
-      where: { name: s.name },
-      update: s,
-      create: s,
-    })
-  }
+/**
+ * Example data arrays: keep your existing arrays for schemes, docs, templates.
+ * If you already have these defined elsewhere in your seed file, keep them and
+ * remove these placeholders.
+ */
+const schemes: Array<Prisma.SchemeCreateInput> = [
+  // ... your scheme records ...
+];
 
-  // Legal docs
-  const legal = [
-    { title: 'Goa: Plastic Waste Management Advisory (sample)', jurisdiction: 'Goa', sector: 'General', locationTag: 'Goa', summary: 'Illustrative advisory on EPR thresholds for MSMEs', url: null, tags: 'goa,plastic,epr' },
-    { title: 'Goa: Consent to Operate timelines (sample)', jurisdiction: 'Goa', sector: 'Manufacturing', locationTag: 'Goa', summary: 'Suggested CTO processing timelines for MSMEs', url: null, tags: 'goa,cto,pollution-control' },
-    { title: 'CPCB: Hazardous Waste Guidelines (sample)', jurisdiction: 'Central', sector: 'General', locationTag: null, summary: 'Key requirements on storage/manifest & disposal', url: null, tags: 'cpcb,hazardous-waste' },
-  ]
-  for (const d of legal) {
-    await prisma.legalDoc.upsert({
-      where: { title: d.title },
-      update: d,
-      create: d,
-    })
-  }
+const legalDocs: Array<
+  Omit<Prisma.LegalDocCreateInput, 'id'> & { id?: string; title: string }
+> = [
+  // Each needs a title. Example:
+  // { title: 'CPCB Guidelines 2024', jurisdiction: 'Central', sector: null, locationTag: null, summary: '...', url: 'https://...', tags: ['CPCB','Guideline'] }
+];
 
-  // Templates
-  const templates = [
-    { title: 'ESG Starter Checklist', category: 'Checklist', contentMd: '# ESG Starter Checklist\n- Identify legal consents\n- Map E/S/G risks\n- Build 30/60/90 plan', downloadUrl: null },
-    { title: 'EIA Input Sheet', category: 'Template', contentMd: '# EIA Input Sheet\nFields: Process, Inputs, Emissions, Effluents, Mitigation', downloadUrl: null },
-  ]
-  for (const t of templates) {
-    await prisma.template.upsert({
-      where: { title: t.title },
-      update: t,
-      create: t,
-    })
-  }
+const templates: Array<
+  Omit<Prisma.TemplateCreateInput, 'id'> & { id?: string; title: string }
+> = [
+  // { title: 'ESG Checklist v1', category: 'Checklist', contentMd: '...', downloadUrl: null }
+];
 
-  // Links (graph)
-  const zed = await prisma.scheme.findUnique({ where: { name: 'MSME Sustainable (ZED) Certification' } })
-  const spice = await prisma.scheme.findUnique({ where: { name: 'MSME SPICE' } })
-  const sidbi4e = await prisma.scheme.findUnique({ where: { name: 'SIDBI 4E (End-to-End Energy Efficiency)' } })
-
-  if (zed && spice) {
-    await prisma.link.upsert({
-      where: { id: 'zed->spice' },
-      update: { relation: 'supports', note: 'ZED compliance strengthens adoption under SPICE', fromId: zed.id, toId: spice.id },
-      create: { id: 'zed->spice', relation: 'supports', note: 'ZED compliance strengthens adoption under SPICE', fromId: zed.id, toId: spice.id },
-    })
-  }
-  if (zed && sidbi4e) {
-    await prisma.link.upsert({
-      where: { id: 'zed->sidbi4e' },
-      update: { relation: 'unlocks', note: 'ZED audit outcomes can unlock 4E financing', fromId: zed.id, toId: sidbi4e.id },
-      create: { id: 'zed->sidbi4e', relation: 'unlocks', note: 'ZED audit outcomes can unlock 4E financing', fromId: zed.id, toId: sidbi4e.id },
-    })
+/**
+ * Helpers that emulate "upsert by title" without requiring a unique index.
+ * We look up by title; if found we update by its unique id, otherwise we create.
+ */
+async function upsertLegalDocByTitle(input: Omit<Prisma.LegalDocCreateInput, 'id'> & { title: string }) {
+  const existing = await prisma.legalDoc.findFirst({ where: { title: input.title } });
+  if (existing) {
+    await prisma.legalDoc.update({
+      where: { id: existing.id },
+      data: input,
+    });
+  } else {
+    await prisma.legalDoc.create({ data: input });
   }
 }
 
-main().then(() => {
-  console.log('Seed complete')
-}).catch(e => {
-  console.error(e)
-  process.exit(1)
-}).finally(async () => {
-  await prisma.$disconnect()
-})
+async function upsertTemplateByTitle(input: Omit<Prisma.TemplateCreateInput, 'id'> & { title: string }) {
+  const existing = await prisma.template.findFirst({ where: { title: input.title } });
+  if (existing) {
+    await prisma.template.update({
+      where: { id: existing.id },
+      data: input,
+    });
+  } else {
+    await prisma.template.create({ data: input });
+  }
+}
+
+/**
+ * If your Scheme model already has `name @unique` (it did earlier), you can
+ * keep using upsert by `name`. If not, mirror the pattern above.
+ */
+async function upsertSchemeByName(input: Prisma.SchemeCreateInput & { name: string }) {
+  const existing = await prisma.scheme.findFirst({ where: { name: input.name } });
+  if (existing) {
+    await prisma.scheme.update({
+      where: { id: existing.id },
+      data: input,
+    });
+  } else {
+    await prisma.scheme.create({ data: input });
+  }
+}
+
+async function main() {
+  console.log('Seeding…');
+
+  // Seed schemes
+  for (const s of schemes) {
+    await upsertSchemeByName(s as Prisma.SchemeCreateInput & { name: string });
+  }
+  console.log(`Seeded/updated ${schemes.length} schemes`);
+
+  // Seed legal docs
+  for (const d of legalDocs) {
+    await upsertLegalDocByTitle(d);
+  }
+  console.log(`Seeded/updated ${legalDocs.length} legal docs`);
+
+  // Seed templates
+  for (const t of templates) {
+    await upsertTemplateByTitle(t);
+  }
+  console.log(`Seeded/updated ${templates.length} templates`);
+}
+
+main()
+  .then(async () => {
+    console.log('Seed complete.');
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
