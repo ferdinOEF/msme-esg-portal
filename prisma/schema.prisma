@@ -1,81 +1,79 @@
-// prisma/schema.prisma
-// SQLite/Postgres compatible. Adjust provider/url as needed.
-datasource db {
-  provider = env("DATABASE_PROVIDER") // e.g. "postgresql" or "sqlite"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "postgresql" // or "sqlite" if you truly use sqlite locally
+  url      = env("DATABASE_URL")
+}
+
 model Scheme {
   id           String   @id @default(cuid())
-  name         String   @unique
+  name         String
   shortCode    String?
-  /// "Scheme" | "Certification" | "Framework" | "Subsidy" (keep as free text for now)
-  type         String
-  authority    String?   // e.g. MSME, SIDBI, State Dept, BIS, ISO
-  pillar       String?   // optional; was missing in DB—kept for forward-compat
-  tags         String    @default("") // CSV tags like "central,scheme,quality"
+  type         String      // e.g., "Certification" | "Scheme" | "Framework" (keep as string for now)
+  authority    String?     // issuing authority
+  tags         String      // comma-separated tags
   description  String?
   benefits     String?
   eligibility  String?
   documentsUrl String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  pillar       String?     // <-- added so app stops breaking when reading .pillar
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  files     File[]
+  // relations
   linksFrom Link[]  @relation("LinksFrom")
   linksTo   Link[]  @relation("LinksTo")
+  files     File[]  // <-- uploaded files tied to scheme
+}
+
+model LegalDoc {
+  id          String   @id @default(cuid())
+  title       String
+  jurisdiction String
+  sector      String?
+  locationTag String?
+  summary     String?
+  url         String?
+  tags        String     // required
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Template {
   id          String   @id @default(cuid())
-  title       String   @unique
-  category    String   // "Checklist" | "Audit" | "Policy" | ...
+  title       String
+  category    String
   contentMd   String
-  tags        String   @default("") // <- add tags to avoid seed error
+  tags        String     // required
   downloadUrl String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model LegalDoc {
-  id          String   @id @default(cuid())
-  title       String   @unique
-  jurisdiction String  // "Central", "State", etc.
-  sector      String?
-  locationTag String?
-  summary     String?
-  url         String?
-  tags        String   @default("") // required logically; default to empty
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Link {
+  id        String  @id @default(cuid())
+  fromId    String
+  toId      String
+  relation  String
+
+  from Scheme @relation(fields: [fromId], references: [id], name: "LinksFrom")
+  to   Scheme @relation(fields: [toId], references: [id], name: "LinksTo")
 }
 
 model File {
-  id        String   @id @default(cuid())
-  schemeId  String?
-  title     String?
-  url       String
-  status    FileStatus @default(UPLOADED)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  schemeId    String?
+  filename    String
+  mimeType    String?
+  sizeBytes   Int?
+  url         String     // where it lives (Vercel Blob / S3 / GDrive link, etc.)
+  kind        String?    // e.g., "circular", "faq", "supporting"
+  status      String?    // e.g., "Uploaded","Pending","Verified"
+  uploadedBy  String?    // future: user id / email
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  scheme    Scheme?  @relation(fields: [schemeId], references: [id], onDelete: Cascade)
-}
-
-enum FileStatus {
-  UPLOADED
-  PENDING
-}
-
-model Link {
-  id           String  @id @default(cuid())
-  fromSchemeId String?
-  toSchemeId   String?
-  label        String?
-
-  from Scheme? @relation("LinksFrom", fields: [fromSchemeId], references: [id], onDelete: Cascade)
-  to   Scheme? @relation("LinksTo",   fields: [toSchemeId],   references: [id], onDelete: Cascade)
+  scheme      Scheme?   @relation(fields: [schemeId], references: [id])
 }
