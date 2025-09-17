@@ -62,18 +62,31 @@ model Link {
   to   Scheme @relation(fields: [toId], references: [id], name: "LinksTo")
 }
 
-model File {
-  id          String   @id @default(cuid())
-  schemeId    String?
-  filename    String
-  mimeType    String?
-  sizeBytes   Int?
-  url         String     // where it lives (Vercel Blob / S3 / GDrive link, etc.)
-  kind        String?    // e.g., "circular", "faq", "supporting"
-  status      String?    // e.g., "Uploaded","Pending","Verified"
-  uploadedBy  String?    // future: user id / email
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  scheme      Scheme?   @relation(fields: [schemeId], references: [id])
+// ---------- File attachments for schemes ----------
+enum FileType {
+  CIRCULAR
+  FAQ
+  GUIDELINE
+  SUPPORTING
+  OTHER
 }
+
+enum FileStatus {
+  UPLOADED
+  PENDING
+}
+
+model File {
+  id         String     @id @default(cuid())
+  schemeId   String?    // nullable so you can also attach files to other things later
+  scheme     Scheme?    @relation(fields: [schemeId], references: [id])
+  title      String
+  type       FileType   @default(SUPPORTING)
+  url        String?    // public URL (e.g., Vercel storage/S3/Drive)
+  storageKey String?    // provider key if you store the blob
+  status     FileStatus @default(UPLOADED)
+
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
