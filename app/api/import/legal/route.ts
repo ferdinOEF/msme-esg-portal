@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { Jurisdiction } from '@prisma/client'
 
 function ok(req: NextRequest) {
   const key = req.headers.get('x-admin-key') || ''
@@ -26,7 +27,10 @@ export async function POST(req: NextRequest) {
     const title = (cells[idx('title')] || '').trim()
     if (!title) continue
 
-    const jurisdiction = (cells[idx('jurisdiction')] || 'Central').trim() || 'Central'
+    const jurisdictionStr = (cells[idx('jurisdiction')] || 'CENTRAL').trim().toUpperCase()
+    const jurisdiction = Object.values(Jurisdiction).includes(jurisdictionStr as Jurisdiction) 
+      ? (jurisdictionStr as Jurisdiction) 
+      : Jurisdiction.CENTRAL
     const sector = (cells[idx('sector')] || '').trim() || null
     const locationTag = (cells[idx('locationTag')] || '').trim() || null
     const summary = (cells[idx('summary')] || '').trim()
